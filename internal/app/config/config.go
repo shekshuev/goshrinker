@@ -8,15 +8,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// Config содержит настройки приложения, включая параметры сервера, базы данных и файлового хранилища.
 type Config struct {
-	ServerAddress          string
-	BaseURL                string
-	FileStoragePath        string
-	DatabaseDSN            string
-	DefaultServerAddress   string
-	DefaultBaseURL         string
-	DefaultFileStoragePath string
-	DefaultDatabaseDSN     string
+	ServerAddress          string // Адрес и порт, на котором запускается сервер.
+	BaseURL                string // Базовый URL для сокращённых ссылок.
+	FileStoragePath        string // Путь к файлу для хранения сокращённых URL.
+	DatabaseDSN            string // Строка подключения к базе данных.
+	DefaultServerAddress   string // Значение по умолчанию для ServerAddress.
+	DefaultBaseURL         string // Значение по умолчанию для BaseURL.
+	DefaultFileStoragePath string // Значение по умолчанию для FileStoragePath.
+	DefaultDatabaseDSN     string // Значение по умолчанию для DatabaseDSN.
 }
 
 type envConfig struct {

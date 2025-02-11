@@ -16,6 +16,8 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 	"go.uber.org/zap"
+
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -41,6 +43,10 @@ func main() {
 			l.Log.Error("Error starting server", zap.Error(err))
 		}
 	}()
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+
 	l.Log.Info("Server started")
 	<-done
 	l.Log.Info("Shutting down server...")

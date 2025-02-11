@@ -2,6 +2,7 @@ package logger
 
 import (
 	"log"
+	"sync"
 
 	"go.uber.org/zap"
 )
@@ -10,12 +11,19 @@ type Logger struct {
 	Log *zap.Logger
 }
 
+var (
+	instance *Logger
+	once     sync.Once
+)
+
 func NewLogger() *Logger {
-	l := &Logger{Log: zap.NewNop()}
-	if err := l.initialize("info"); err != nil {
-		log.Fatalf("Error initialize zap logger: %v", err)
-	}
-	return l
+	once.Do(func() {
+		instance = &Logger{Log: zap.NewNop()}
+		if err := instance.initialize("info"); err != nil {
+			log.Fatalf("Error initializing zap logger: %v", err)
+		}
+	})
+	return instance
 }
 
 func (l *Logger) initialize(level string) error {

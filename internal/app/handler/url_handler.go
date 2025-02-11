@@ -15,11 +15,13 @@ import (
 	"github.com/shekshuev/shortener/internal/app/store"
 )
 
+// URLHandler обрабатывает HTTP-запросы для управления сокращёнными URL.
 type URLHandler struct {
 	service service.Service
 	Router  *chi.Mux
 }
 
+// NewURLHandler создаёт новый экземпляр URLHandler с зарегистрированными маршрутами.
 func NewURLHandler(service service.Service) *URLHandler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestAuth)
@@ -36,6 +38,9 @@ func NewURLHandler(service service.Service) *URLHandler {
 	return h
 }
 
+// createURLHandler обрабатывает создание короткого URL из обычного.
+// Запрос: `POST /`, тело — строка с URL.
+// Ответ: 201 Created + короткий URL, либо 409 Conflict, если URL уже существует.
 func (h *URLHandler) createURLHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -67,6 +72,9 @@ func (h *URLHandler) createURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// createURLHandlerJSON обрабатывает создание короткого URL через JSON.
+// Запрос: `POST /api/shorten`, тело — JSON {"url": "http://example.com"}.
+// Ответ: 201 Created + JSON {"result": "short_url"}, либо 409 Conflict.
 func (h *URLHandler) createURLHandlerJSON(w http.ResponseWriter, r *http.Request) {
 	var createDTO models.ShortURLCreateDTO
 	body, err := io.ReadAll(r.Body)
@@ -110,6 +118,9 @@ func (h *URLHandler) createURLHandlerJSON(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// getURLHandler обрабатывает редирект по сокращённому URL.
+// Запрос: `GET /{shorted}`.
+// Ответ: 307 Temporary Redirect на оригинальный URL или 410 Gone, если URL удалён.
 func (h *URLHandler) getURLHandler(w http.ResponseWriter, r *http.Request) {
 	urlPath := path.Base(r.URL.Path)
 	if longURL, err := h.service.GetLongURL(urlPath); err == nil {
@@ -124,6 +135,9 @@ func (h *URLHandler) getURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getUserURLsHandler получает список всех сокращённых URL пользователя.
+// Запрос: `GET /api/user/urls`.
+// Ответ: 200 OK + JSON или 204 No Content, если URL нет.
 func (h *URLHandler) getUserURLsHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := jwt.GetAuthCookie(r)
 	if err != nil {
@@ -149,6 +163,9 @@ func (h *URLHandler) getUserURLsHandler(w http.ResponseWriter, r *http.Request) 
 
 }
 
+// deleteUserURLsHandler удаляет список URL пользователя.
+// Запрос: `DELETE /api/user/urls`, тело — JSON-массив сокращённых URL.
+// Ответ: 202 Accepted.
 func (h *URLHandler) deleteUserURLsHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := jwt.GetAuthCookie(r)
 	if err != nil {
@@ -172,6 +189,9 @@ func (h *URLHandler) deleteUserURLsHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// pingURLHandler проверяет доступность базы данных.
+// Запрос: `GET /ping`.
+// Ответ: 200 OK, если БД работает, иначе 500 Internal Server Error.
 func (h *URLHandler) pingURLHandler(w http.ResponseWriter, _ *http.Request) {
 	err := h.service.CheckDBConnection()
 	if err == nil {
@@ -181,6 +201,9 @@ func (h *URLHandler) pingURLHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// batchCreateURLHandlerJSON создаёт несколько сокращённых URL за один запрос.
+// Запрос: `POST /api/shorten/batch`, тело — JSON-массив объектов { "url": "http://example.com" }.
+// Ответ: 201 Created + JSON-массив результатов, либо 409 Conflict.
 func (h *URLHandler) batchCreateURLHandlerJSON(w http.ResponseWriter, r *http.Request) {
 	var createDTO []models.BatchShortURLCreateDTO
 	body, err := io.ReadAll(r.Body)
